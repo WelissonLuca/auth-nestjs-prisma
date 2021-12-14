@@ -1,26 +1,42 @@
 import { Injectable } from '@nestjs/common';
+
+// Prisma
+import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
+
+// Models
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './entities/user.entity';
+
+// Errors
+//import { ForbiddenError } from '../../errors/forbidden.error';
+
+// Bcrypt
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserService {
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+  constructor(private readonly prisma: PrismaService) {}
+
+  public async create(createUserDto: CreateUserDto): Promise<User> {
+    const data: Prisma.UserCreateInput = {
+      ...createUserDto,
+      password: await bcrypt.hash(createUserDto.password, 10),
+    };
+
+    const createdUser = await this.prisma.user.create({ data });
+
+    return {
+      ...createdUser,
+      password: undefined,
+    };
   }
 
-  findAll() {
-    return `This action returns all user`;
+  findById(id: number) {
+    return this.prisma.user.findUnique({ where: { id } });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
-
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  findByEmail(email: string) {
+    return this.prisma.user.findUnique({ where: { email } });
   }
 }
