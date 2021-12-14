@@ -39,4 +39,30 @@ export class UserService {
   findByEmail(email: string) {
     return this.prisma.user.findUnique({ where: { email } });
   }
+
+  async update(id: number, data: Partial<User>) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id },
+      data,
+    });
+
+    return {
+      ...updatedUser,
+      password: undefined,
+    };
+  }
+
+  async delete(id: number): Promise<void> {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    await this.prisma.user.delete({ where: { id } });
+  }
 }
